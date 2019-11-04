@@ -8,54 +8,93 @@ describe PetsController do
       get pets_path
       must_respond_with :success
     end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
-  #   it "returns json" do
-  #     get pets_path
-  #     expect(response.header['Content-Type']).must_include 'json'
-  #   end
+    it "returns json" do
+      get pets_path
+      expect(response.header['Content-Type']).must_include 'json'
+    end
+
+    it "responds with an array of pet hashes" do
+      # Act
+      get pets_path
+  
+      # Get the body of the response
+      body = JSON.parse(response.body)
+  
+      # Assert
+      expect(body).must_be_instance_of Array
+      body.each do |pet|
+        expect(pet).must_be_instance_of Hash
+        expect(pet.keys.sort).must_equal ["age", "human", "id", "name"]
+      end
+    end
+
+    it "will respond with an empty array when there are no pets" do
+      # Arrange
+      Pet.destroy_all
+  
+      # Act
+      get pets_path
+      body = JSON.parse(response.body)
+  
+      # Assert
+      expect(body).must_be_instance_of Array
+      expect(body).must_equal []
+    end
+  end
+
+  describe "show" do
+    it "returns a pet hash for valid pet" do
+      # Arrange
+      pet = Pet.first
+
+      # Act
+      get pet_path(pet)
+      body = JSON.parse(response.body)
+
+      # Assert 
+      expect(body).must_be_instance_of Hash
+      must_respond_with :success
+      expect(body.keys.sort).must_equal ["age", "human", "id", "name"]
+
+    end
+
+    it "returns an empty hash for invalid pet and a 404 
+    code" do
+      # Arrange
+      invalid_id = -100
+
+      # Act
+      get pet_path(invalid_id)
+      body = JSON.parse(response.body)
+
+      # Assert
+      expect(body).must_be_instance_of Hash
+      must_respond_with :not_found
+    end
+  end
+  describe "create" do
+    # pets_controller_test.rb
+  describe "create" do
+    let(:pet_data) {
+      {
+        pet: {
+          age: 13,
+          name: 'Stinker',
+          human: 'Grace'
+        }
+      }
+    }
+    it "can create a new pet" do
+      expect {
+        post pets_path, params: pet_data
+      }.must_change 'Pet.count', 1
+
+      must_respond_with :created
+    end
+  end
+  end
+end
 
   #   it "returns an Array" do
   #     get pets_path
@@ -129,5 +168,4 @@ describe PetsController do
   #     must_respond_with :bad_request
   #   end
 
-  end
-end
+
