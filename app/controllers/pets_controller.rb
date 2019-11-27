@@ -1,4 +1,4 @@
-KEYS = [:id, :name, :age, :human]
+KEYS = ["id", "name", "age", "human"].sort
 
 class PetsController < ApplicationController
   #protect_from_forgery with: :null_session
@@ -22,10 +22,11 @@ class PetsController < ApplicationController
     pet = Pet.new(pet_params)
 
     if pet.save
-      render json: pet.as_json(only: [:id], status: :created)
+      render json: pet.as_json(only: [:id]), status: :created
       return
     else
-      puts "hi"
+      render json: {ok: false, errors: pet.errors.messages}, status: :bad_request
+      return
     end
 
   end
@@ -35,4 +36,5 @@ class PetsController < ApplicationController
   def pet_params
     params.require(:pet).permit(:name, :age, :human)
   end
+
 end

@@ -1,4 +1,5 @@
 require 'test_helper'
+KEYS = ["id", "name", "age", "human"].sort
 
 describe PetsController do
   describe "index" do
@@ -6,7 +7,8 @@ describe PetsController do
     # this explicit.
     it "is a real working route" do
       get pets_path
-      must_respond_with :success
+      #must_respond_with :success
+      check_response(expected_type: Array)
     end
     
     it "returns json" do
@@ -19,13 +21,14 @@ describe PetsController do
       get pets_path
   
       # Get the body of the response
-      body = JSON.parse(response.body)
+      #body = JSON.parse(response.body)
+      body = check_response(expected_type: Array)
   
       # Assert
-      expect(body).must_be_instance_of Array
+      #expect(body).must_be_instance_of Array
       body.each do |pet|
         expect(pet).must_be_instance_of Hash
-        expect(pet.keys.sort).must_equal ["age", "human", "id", "name"]
+        expect(pet.keys.sort).must_equal KEYS
       end
     end
 
@@ -35,10 +38,9 @@ describe PetsController do
   
       # Act
       get pets_path
-      body = JSON.parse(response.body)
+      body = check_response(expected_type: Array)
   
       # Assert
-      expect(body).must_be_instance_of Array
       expect(body).must_equal []
     end
   end
@@ -55,7 +57,7 @@ describe PetsController do
       # Assert 
       expect(body).must_be_instance_of Hash
       must_respond_with :success
-      expect(body.keys.sort).must_equal ["age", "human", "id", "name"]
+      expect(body.keys.sort).must_equal KEYS
 
     end
 
@@ -92,6 +94,20 @@ describe PetsController do
 
       must_respond_with :created
     end
+
+    it "will respond with bad_request for invalid data" do
+      #arrange
+      pet_data[:pet][:age] = nil
+
+      expect{post pets_path, params: pet_data}.wont_change "Pet.count"
+
+      must_respond_with :bad_request
+      expect(response.header['Content-Type']).must_include 'json'
+      body = JSON.parse(response.body)
+      expect(body["errors"].keys).must_include "age"
+    end
+
+
   end
   end
 end
